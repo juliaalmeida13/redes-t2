@@ -133,6 +133,10 @@ class Servidor:
             seg_checksum_ver = fix_checksum(seg, src_addr, dst_addr)
             self.rede.enviar(seg_checksum_ver, dst_addr)
 
+            conexao.seq_no = conexao.seq_no  + 1
+            conexao.seq_no_base = conexao.seq_no
+
+
             if self.callback:
                 self.callback(conexao)
         elif id_conexao in self.conexoes:
@@ -152,6 +156,7 @@ class Conexao:
         #Passo 1
         self.seq_no = None
         self.ack_no = None
+        self.seq_no_base = None
         #self.timer.cancel()   # é possível cancelar o timer chamando esse método; esta linha é só um exemplo e pode ser removida
 
     def _exemplo_timer(self):
