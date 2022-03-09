@@ -184,10 +184,7 @@ class Conexao:
         self.callback(self, payload)
         self.ack_no += len(payload)
 
-        dst_addr = self.id_conexao
-        dst_port = self.id_conexao
-        src_addr = self.id_conexao 
-        src_port = self.id_conexao
+        dst_addr, dst_port , src_addr , src_port = self.id_conexao
 
         seg = make_header (src_port,dst_port,self.seq_no_base,self.ack_no, FLAGS_ACK)
         seg_checksum_ver = fix_checksum(seg,src_addr,dst_addr)
