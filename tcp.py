@@ -160,6 +160,8 @@ class Conexao:
         self.seq_no_base = None
         #Passo 2
         self.pacotes_sem_ack = []
+        #Passo 3
+        self.fechado = False
         #self.timer.cancel()   # é possível cancelar o timer chamando esse método; esta linha é só um exemplo e pode ser removida
 
     def _exemplo_timer(self):
@@ -236,4 +238,11 @@ class Conexao:
         Usado pela camada de aplicação para fechar a conexão
         """
         # TODO: implemente aqui o fechamento de conexão
-        pass
+        #Passo 4
+        dst_addr, dst_port , src_addr , src_port = self.id_conexao
+
+        flags = FLAGS_ACK | FLAGS_FIN
+        seg = make_header (src_port,dst_port,self.seq_no,self.ack_no, flags)
+        seg_checksum_ver = fix_checksum(seg ,src_addr,dst_addr)
+        self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
+        self.fechado = True
