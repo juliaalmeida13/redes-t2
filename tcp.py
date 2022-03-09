@@ -184,11 +184,11 @@ class Conexao:
         self.callback(self, payload)
         self.ack_no += len(payload)
 
-        dst_addr, dst_port , src_addr , src_port = self.id_conexao
+        #dst_addr, dst_port , src_addr , src_port = self.id_conexao
 
-        seg = make_header (src_port,dst_port,self.seq_no_base,self.ack_no, FLAGS_ACK)
-        seg_checksum_ver = fix_checksum(seg,src_addr,dst_addr)
-        #self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
+       # seg = make_header (src_port,dst_port,self.seq_no_base,self.ack_no, FLAGS_ACK)
+        #seg_checksum_ver = fix_checksum(seg,src_addr,dst_addr)
+       # self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
 
           
 
@@ -210,7 +210,7 @@ class Conexao:
         # TODO: implemente aqui o envio de dados.
         # Chame self.servidor.rede.enviar(segmento, dest_addr) para enviar o segmento
         # que você construir para a camada de rede.
-        pass
+        
 
     def fechar(self):
         """
