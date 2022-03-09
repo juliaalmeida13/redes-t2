@@ -1,4 +1,6 @@
 import asyncio
+from curses import flash
+from random import randint
 from tcputils import *
 import struct
 
@@ -111,12 +113,26 @@ class Servidor:
         payload = segment[4*(flags>>12):]
         id_conexao = (src_addr, src_port, dst_addr, dst_port)
 
+        #Passo 1
+
         if (flags & FLAGS_SYN) == FLAGS_SYN:
             # A flag SYN estar setada significa que é um cliente tentando estabelecer uma conexão nova
-            # TODO: talvez você precise passar mais coisas para o construtor de conexão
+            # TODO: talvez você precise passar mais coisas para o construtor de conexão            
             conexao = self.conexoes[id_conexao] = Conexao(self, id_conexao)
             # TODO: você precisa fazer o handshake aceitando a conexão. Escolha se você acha melhor
             # fazer aqui mesmo ou dentro da classe Conexao.
+            flags = flash & 0
+            flags = flags or ( FLAGS_SYN or FLAGS_ACK)
+
+            conexao.seq_no = randint(0, 0xffff)
+            conexao.ack_no = seq_no + 1
+            src_port, dst_port = dst_port, src_port
+            src_addr, dst_addr = dst_addr, src_addr
+
+            seg = make_header(src_port,dst_port,conexao.seq_no,conexao.ack_no, flags)
+            seg_checksum_ver = fix_checksum(seg, src_addr, dst_addr)
+            self.rede.enviar(seg_checksum_ver, dst_addr)
+
             if self.callback:
                 self.callback(conexao)
         elif id_conexao in self.conexoes:
@@ -133,6 +149,9 @@ class Conexao:
         self.id_conexao = id_conexao
         self.callback = None
         self.timer = asyncio.get_event_loop().call_later(1, self._exemplo_timer)  # um timer pode ser criado assim; esta linha é só um exemplo e pode ser removida
+        #Passo 1
+        self.seq_no = None
+        self.ack_no = None
         #self.timer.cancel()   # é possível cancelar o timer chamando esse método; esta linha é só um exemplo e pode ser removida
 
     def _exemplo_timer(self):
