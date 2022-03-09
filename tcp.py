@@ -222,10 +222,9 @@ class Conexao:
             fim = min(len(dados), (i+1)*MSS)
 
             payload = dados[inicio:fim]
-            print(payload)
 
-            seg = make_header (src_port,dst_port,self.seq_no_base,self.ack_no, flags)
-            seg_checksum_ver = fix_checksum(seg,src_addr,dst_addr)
+            seg = make_header (src_port,dst_port,self.seq_no,self.ack_no, flags)
+            seg_checksum_ver = fix_checksum(seg + payload,src_addr,dst_addr)
             self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
 
             self.seq_no += len(payload)
