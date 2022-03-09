@@ -121,7 +121,7 @@ class Servidor:
             conexao = self.conexoes[id_conexao] = Conexao(self, id_conexao)
             # TODO: você precisa fazer o handshake aceitando a conexão. Escolha se você acha melhor
             # fazer aqui mesmo ou dentro da classe Conexao.
-            flags = flash & 0
+            flags = flags & 0
             flags = flags or ( FLAGS_SYN or FLAGS_ACK)
 
             conexao.seq_no = randint(0, 0xffff)
