@@ -188,7 +188,7 @@ class Conexao:
 
         seg = make_header (src_port,dst_port,self.seq_no_base,self.ack_no, FLAGS_ACK)
         seg_checksum_ver = fix_checksum(seg,src_addr,dst_addr)
-        self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
+        #self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
 
           
 
