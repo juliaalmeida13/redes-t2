@@ -239,7 +239,7 @@ class Conexao:
         #Passo 4
         dst_addr, dst_port , src_addr , src_port = self.id_conexao
 
-        seg = make_header (src_port,dst_port,self.seq_no + 1,self.ack_no, FLAGS_FIN)
+        seg = make_header (src_port,dst_port,self.seq_no + 1,self.ack_no, FLAGS_FIN | FLAGS_ACK)
         seg_checksum_ver = fix_checksum(seg ,src_addr,dst_addr)
         self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
         self.servidor.close(self.id_conexao)
