@@ -122,7 +122,7 @@ class Servidor:
             # TODO: você precisa fazer o handshake aceitando a conexão. Escolha se você acha melhor
             # fazer aqui mesmo ou dentro da classe Conexao.
             flags = flags & 0
-            flags = flags or ( FLAGS_SYN or FLAGS_ACK)
+            flags = flags | ( FLAGS_SYN | FLAGS_ACK)
 
             conexao.seq_no = randint(0, 0xffff)
             conexao.ack_no = seq_no + 1
