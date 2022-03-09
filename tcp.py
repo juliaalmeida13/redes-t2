@@ -1,6 +1,7 @@
 import asyncio
 from curses import flash
 from random import randint
+from sys import flags
 from tcputils import *
 import struct
 
@@ -157,6 +158,8 @@ class Conexao:
         self.seq_no = None
         self.ack_no = None
         self.seq_no_base = None
+        #Passo 2
+        self.pacotes_sem_ack = []
         #self.timer.cancel()   # é possível cancelar o timer chamando esse método; esta linha é só um exemplo e pode ser removida
 
     def _exemplo_timer(self):
@@ -168,6 +171,31 @@ class Conexao:
         # Chame self.callback(self, dados) para passar dados para a camada de aplicação após
         # garantir que eles não sejam duplicados e que tenham sido recebidos em ordem.
         print('recebido payload: %r' % payload)
+
+        #Lidando com o Passo 2 aqui
+        if  (flags & FLAGS_FIN) == FLAGS_FIN:
+            payload = b''
+            self.ack_no += 1
+        elif len(payload) <= 0:
+            return
+        
+        if seq_no != self.ack_no:
+            return
+        self.callback(self, payload)
+        self.ack_no += len(payload)
+
+        dst_addr = self.id_conexao
+        dst_port = self.id_conexao
+        src_addr = self.id_conexao 
+        src_port = self.id_conexao
+
+        seg = make_header (src_port,dst_port,self.seq_no_base,self.ack_no, FLAGS_ACK)
+        seg_checksum_ver = fix_checksum(seg,src_addr,dst_addr)
+        self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
+
+          
+
+
 
     # Os métodos abaixo fazem parte da API
 
