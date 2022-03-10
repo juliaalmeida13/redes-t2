@@ -173,7 +173,7 @@ class Conexao:
             segmento, _, dst_addr, _ = self.pacotes_sem_ack[0]
             self.pacotes_sem_ack[0][3] = None
             self.servidor.rede.enviar(segmento, dst_addr)
-            
+
     def _rdt_rcv(self, seq_no, ack_no, flags, payload):
         # TODO: trate aqui o recebimento de segmentos provenientes da camada de rede.
         # Chame self.callback(self, dados) para passar dados para a camada de aplicação após
@@ -197,7 +197,8 @@ class Conexao:
         seg = make_header (src_port,dst_port,self.seq_no_base,self.ack_no, FLAGS_ACK)
         seg_checksum_ver = fix_checksum(seg,src_addr,dst_addr)
         self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
-
+        if self.pacotes_sem_ack:
+            self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._verifica_timer)
     # Os métodos abaixo fazem parte da API
 
     def registrar_recebedor(self, callback):
@@ -229,6 +230,7 @@ class Conexao:
 
             seg = make_header (src_port,dst_port,self.seq_no,self.ack_no, flags)
             seg_checksum_ver = fix_checksum(seg + payload,src_addr,dst_addr)
+            self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._timer)
             self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
 
             self.seq_no += len(payload)
