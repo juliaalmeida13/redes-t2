@@ -4,6 +4,7 @@ from random import randint
 from sys import flags
 from tcputils import *
 import struct
+from time import time
 
 # Valores das flags que serão usadas na nossa implementação simplificada
 FLAGS_FIN = 1<<0
@@ -161,11 +162,18 @@ class Conexao:
         #Passo 2
         self.pacotes_sem_ack = []
         #self.timer.cancel()   # é possível cancelar o timer chamando esse método; esta linha é só um exemplo e pode ser removida
-
+    
     def _exemplo_timer(self):
         # Esta função é só um exemplo e pode ser removida
         print('Este é um exemplo de como fazer um timer')
 
+    #Passo 5
+    def _verifica_timer(self):
+        if self.pacotes_sem_ack:
+            segmento, _, dst_addr, _ = self.pacotes_sem_ack[0]
+            self.pacotes_sem_ack[0][3] = None
+            self.servidor.rede.enviar(segmento, dst_addr)
+            
     def _rdt_rcv(self, seq_no, ack_no, flags, payload):
         # TODO: trate aqui o recebimento de segmentos provenientes da camada de rede.
         # Chame self.callback(self, dados) para passar dados para a camada de aplicação após
@@ -189,10 +197,6 @@ class Conexao:
         seg = make_header (src_port,dst_port,self.seq_no_base,self.ack_no, FLAGS_ACK)
         seg_checksum_ver = fix_checksum(seg,src_addr,dst_addr)
         self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
-
-          
-
-
 
     # Os métodos abaixo fazem parte da API
 
@@ -229,8 +233,6 @@ class Conexao:
 
             self.seq_no += len(payload)
 
-        
-
     def fechar(self):
         """
         Usado pela camada de aplicação para fechar a conexão
@@ -243,3 +245,5 @@ class Conexao:
         seg_checksum_ver = fix_checksum(seg ,src_addr,dst_addr)
         self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
         self.servidor.close(self.id_conexao)
+
+
