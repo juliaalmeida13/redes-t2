@@ -155,6 +155,7 @@ class Conexao:
         self.id_conexao = id_conexao
         self.callback = None
         self.timer = asyncio.get_event_loop().call_later(1, self._exemplo_timer)  # um timer pode ser criado assim; esta linha é só um exemplo e pode ser removida
+        self.timeoutInterval = 1
         #Passo 1
         self.seq_no = None
         self.ack_no = None
