@@ -168,12 +168,28 @@ class Conexao:
         # Esta função é só um exemplo e pode ser removida
         print('Este é um exemplo de como fazer um timer')
 
-    #Passo 5
-    def _verifica_timer(self):
+    def _timer(self):
         if self.pacotes_sem_ack:
             segmento, _, dst_addr, _ = self.pacotes_sem_ack[0]
-            self.pacotes_sem_ack[0][3] = None
+            # Reenviando pacote
             self.servidor.rede.enviar(segmento, dst_addr)
+            self.pacotes_sem_ack[0][3] = None        
+
+    #Passo 5
+    def _timeout_interval(self):
+        _, _, _, sample = self.pacotes_sem_ack[0]
+        if sample is None:
+            return
+
+        sample = round(time(), 5) - sample
+        if self.estimatedRTT is None:
+            self.estimatedRTT = sample
+            self.devRTT = sample/2
+        else:
+            self.estimatedRTT = 0.875*self.estimatedRTT + 0.125*sample
+            self.devRTT = 0.75*self.devRTT + 0.25 * abs(sample-self.estimatedRTT)
+
+        self.timeoutInterval = self.estimatedRTT + 4*self.devRTT
 
     def _rdt_rcv(self, seq_no, ack_no, flags, payload):
         # TODO: trate aqui o recebimento de segmentos provenientes da camada de rede.
@@ -181,11 +197,20 @@ class Conexao:
         # garantir que eles não sejam duplicados e que tenham sido recebidos em ordem.
         print('recebido payload: %r' % payload)
 
+        if (flags & FLAGS_ACK) == FLAGS_ACK and ack_no > self.seq_no_base:
+            self.seq_no_base = ack_no
+            if self.pacotes_sem_ack:
+                self._atualizar_timeout_interval()
+                self.timer.cancel()
+                self.pacotes_sem_ack.pop(0)
+                if self.pacotes_sem_ack:
+                    self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._timer)
+
         #Lidando com o Passo 2 aqui
         if  (flags & FLAGS_FIN) == FLAGS_FIN:
             payload = b''
             self.ack_no += 1
-        elif len(payload) <= 0:
+        elif len(payload) == 0:
             return
         
         if seq_no != self.ack_no:
@@ -198,8 +223,6 @@ class Conexao:
         seg = make_header (src_port,dst_port,self.seq_no_base,self.ack_no, FLAGS_ACK)
         seg_checksum_ver = fix_checksum(seg,src_addr,dst_addr)
         self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
-        if self.pacotes_sem_ack:
-            self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._verifica_timer)
     # Os métodos abaixo fazem parte da API
 
     def registrar_recebedor(self, callback):
@@ -232,7 +255,7 @@ class Conexao:
             seg = make_header (src_port,dst_port,self.seq_no,self.ack_no, flags)
             seg_checksum_ver = fix_checksum(seg + payload,src_addr,dst_addr)
 
-            self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._verifica_timer)
+            self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._exemplo_timer)
             self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
             self.seq_no += len(payload)
 
