@@ -255,7 +255,7 @@ class Conexao:
             seg = make_header (src_port,dst_port,self.seq_no,self.ack_no, flags)
             seg_checksum_ver = fix_checksum(seg + payload,src_addr,dst_addr)
 
-            self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._exemplo_timer)
+            self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._timer)
             self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
             self.seq_no += len(payload)
 
@@ -271,5 +271,6 @@ class Conexao:
         seg_checksum_ver = fix_checksum(seg ,src_addr,dst_addr)
         self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
         self.servidor.close(self.id_conexao)
+        pass
 
 
