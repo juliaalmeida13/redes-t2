@@ -170,6 +170,7 @@ class Conexao:
         self.fila_envio = []
 
         self.cwnd = 1
+        self.sent_pkts = []
     #def _exemplo_timer(self):
         # Esta função é só um exemplo e pode ser removida
         #print('Este é um exemplo de como fazer um timer')
@@ -198,6 +199,20 @@ class Conexao:
             self.devRTT = 0.75*self.devRTT + 0.25 * abs(sampleRTT-self.estimatedRTT)
 
         self.timeoutInterval = self.estimatedRTT + 4*self.devRTT
+
+    def _ack_pkt(self, ack_no):
+        if len(self.sent_pkts) == 0:
+            return
+        self.cwnd += 1
+        idx = self._get_idx(ack_no)
+        _, t0 = self.sent_pkts[idx]
+        del self.sent_pkts[:idx + 1]
+        if t0 is not None:
+            self.timeoutInterval = self.timeout_interval(t0, time.time())
+        if len(self.sent_pkts) == 0:
+            self.timer.cancel()
+            self._send_window()
+
     
     def _rdt_rcv(self, seq_no, ack_no, flags, payload):
         # TODO: trate aqui o recebimento de segmentos provenientes da camada de rede.
