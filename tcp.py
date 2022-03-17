@@ -288,17 +288,9 @@ class Conexao:
         """
         # TODO: implemente aqui o fechamento de conexão
         #Passo 4
-        (src_addr, src_port, dst_addr, dst_port) = self.id_conexao
-        del self.servidor.conexoes[self.id_conexao]
-
-        new_src_addr = dst_addr
-        new_dst_addr = src_addr
-
-        new_src_port = dst_port
-        new_dst_port = src_port
-
-        header = make_header(new_src_port, new_dst_port, self.ack_no,
-                             self.seq_no, FLAGS_FIN)
-        header = fix_checksum(header, new_src_addr, new_dst_addr)
-        self.servidor.rede.enviar(header, new_dst_addr)
-        pass
+        package_header = make_header(
+            self.src_port, self.dst_port, self.seq_no + 1, self.ack_no, FLAGS_FIN
+        )
+        package = fix_checksum(package_header, self.src_addr, self.dst_addr)
+        self.servidor.rede.enviar(package, self.dst_addr)
+        self.servidor.close(self.id_conexao)
