@@ -263,15 +263,22 @@ class Conexao:
         # que você construir para a camada de rede.
 
         #Passo 3 
-        while len(dados) != 0:
-            package_header = make_header(
-                self.src_port, self.dst_port, self.seq_no + 1, self.ack_no, FLAGS_ACK
-            )
-            package = fix_checksum(package_header + dados[:MSS], self.src_addr, self.dst_addr)
-            self.pktsQ.append(package)
-            self.seq_no += len(dados[:MSS])
-            dados = dados[MSS:]
-        self._send_window()
+        dst_addr, dst_port , src_addr , src_port = self.id_conexao
+
+        flags = 0 | FLAGS_ACK
+
+        for i in range(len(dados)// MSS):
+            inicio = i*MSS
+            fim = min(len(dados), (i+1)*MSS)
+
+            payload = dados[inicio:fim]
+
+            seg = make_header (src_port,dst_port,self.seq_no,self.ack_no, flags)
+            seg_checksum_ver = fix_checksum(seg + payload,src_addr,dst_addr)
+
+            self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._timer)
+            self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
+            self.seq_no += len(payload)
 
     def fechar(self):
         """
