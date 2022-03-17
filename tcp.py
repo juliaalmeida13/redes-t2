@@ -168,9 +168,6 @@ class Conexao:
         self.devRTT = None
         self.estimatedRTT = None
         self.fila_envio = []
-        self.cwnd = 1
-        self.pktsQ = []
-        self.sent_pkts = []
 
     #def _exemplo_timer(self):
         # Esta função é só um exemplo e pode ser removida
@@ -178,10 +175,6 @@ class Conexao:
 
     # Passo 5: Timer
     def _timer(self):
-        self.cwnd = max(1, self.cwnd // 2)
-        for i, (pkt, _) in enumerate(self.sent_pkts):
-            self.sent_pkts[i] = (pkt, None) # remove timing since it was not recvd
-        pkt, _ = self.sent_pkts[0]
         if self.pacotes_sem_ack:
             segmento, _, dst_addr, _ = self.pacotes_sem_ack[0]
 
@@ -204,27 +197,6 @@ class Conexao:
             self.devRTT = 0.75*self.devRTT + 0.25 * abs(sampleRTT-self.estimatedRTT)
 
         self.timeoutInterval = self.estimatedRTT + 4*self.devRTT
-
-    def _get_idx(self, acked_pkt):
-        max_idx = None
-        for i, (pkt, _) in enumerate(self.sent_pkts):
-            _, _, seq_not_acked, _, _, _, _, _ = read_header(pkt)
-            if acked_pkt > seq_not_acked:
-                max_idx = i
-        return 
-
-    def _ack_pkt(self, ack_no):
-        if len(self.sent_pkts) == 0:
-            return
-        self.cwnd += 1
-        idx = self._get_idx(ack_no)
-        _, t0 = self.sent_pkts[idx]
-        del self.sent_pkts[:idx + 1]
-        if t0 is not None:
-            self.timeout_interval = self.timeout_interval(t0, time.time())
-        if len(self.sent_pkts) == 0:
-            self.timer.cancel()
-            self._send_window()    
     
     def _rdt_rcv(self, seq_no, ack_no, flags, payload):
         # TODO: trate aqui o recebimento de segmentos provenientes da camada de rede.
@@ -322,4 +294,3 @@ class Conexao:
         package = fix_checksum(package_header, self.src_addr, self.dst_addr)
         self.servidor.rede.enviar(package, self.dst_addr)
         self.servidor.close(self.id_conexao)
-        pass
