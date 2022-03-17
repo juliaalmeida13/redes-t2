@@ -267,10 +267,6 @@ class Conexao:
 
         flags = 0 | FLAGS_ACK
 
-        if(len(dados) > MSS):
-            self.enviar(dados[:MSS])
-            self.enviar(dados[MSS:])
-
         for i in range(len(dados)// MSS):
             inicio = i*MSS
             fim = min(len(dados), (i+1)*MSS)
@@ -284,8 +280,6 @@ class Conexao:
             self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
             self.seq_no += len(payload)
         
-        if not self.timer:
-            self.start_timer()
 
     def fechar(self):
         """
