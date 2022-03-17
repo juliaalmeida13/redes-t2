@@ -169,6 +169,13 @@ class Conexao:
         self.estimatedRTT = None
         self.fila_envio = []
 
+        self.pktsQ = []
+        self.sent_pkts = []
+        self.start_time = None
+        self.estimated_rtt = None
+        self.dev_rtt = None
+        self.cwnd = 1
+
     #def _exemplo_timer(self):
         # Esta função é só um exemplo e pode ser removida
         #print('Este é um exemplo de como fazer um timer')
@@ -181,7 +188,7 @@ class Conexao:
             self.sent_pkts[i] = (pkt, None) # remove timing since it was not recvd
         pkt, _ = self.sent_pkts[0]
         self.servidor.rede.enviar(pkt, self.dst_addr)
-        self.timer = asyncio.get_event_loop().call_later(self.timeout_interval, self._timeout)
+        self.timer = asyncio.get_event_loop().call_later(self.timeout_interval, self._timer)
 
 
     # Passo 6: calculando o TimeoutInterval
