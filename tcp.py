@@ -177,11 +177,12 @@ class Conexao:
 
     # Passo 5: Timer
     def _timer(self):
-        if self.pacotes_sem_ack:
-            segmento, _, dst_addr, _ = self.pacotes_sem_ack[0]
-
-            self.servidor.rede.enviar(segmento, dst_addr)
-            self.pacotes_sem_ack[0][3] = None
+        self.cwnd = max(1, self.cwnd // 2)
+        for i, (pkt, _) in enumerate(self.sent_pkts):
+            self.sent_pkts[i] = (pkt, None) # remove timing since it was not recvd
+        pkt, _ = self.sent_pkts[0]
+        self.servidor.rede.enviar(pkt, self.dst_addr)
+        self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._timer)
 
 
     # Passo 6: calculando o TimeoutInterval
@@ -219,8 +220,6 @@ class Conexao:
         # Chame self.callback(self, dados) para passar dados para a camada de aplicação após
         # garantir que eles não sejam duplicados e que tenham sido recebidos em ordem.
         print('recebido payload: %r' % payload)
-
-        self.cwnd += 1
 
         if (flags & FLAGS_ACK) == FLAGS_ACK and ack_no > self.seq_no_base:
             self.seq_no_base = ack_no
