@@ -171,6 +171,7 @@ class Conexao:
 
         self.cwnd = 1
         self.sent_pkts = []
+        self.pktsQ = []
     #def _exemplo_timer(self):
         # Esta função é só um exemplo e pode ser removida
         #print('Este é um exemplo de como fazer um timer')
@@ -271,7 +272,7 @@ class Conexao:
             i += 1
         if self.timer is not None:
             self.timer.cancel()
-        self.timer = asyncio.get_event_loop().call_later(self.timeout_interval, self._timer)
+        self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._timer)
 
     def enviar(self, dados):
         """
