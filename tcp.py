@@ -169,26 +169,17 @@ class Conexao:
         self.estimatedRTT = None
         self.fila_envio = []
 
-        self.pktsQ = []
-        self.sent_pkts = []
-        self.start_time = None
-        self.estimated_rtt = None
-        self.dev_rtt = None
-        self.cwnd = 1
-
     #def _exemplo_timer(self):
         # Esta função é só um exemplo e pode ser removida
         #print('Este é um exemplo de como fazer um timer')
 
     # Passo 5: Timer
-
     def _timer(self):
-        self.cwnd = max(1, self.cwnd // 2)
-        for i, (pkt, _) in enumerate(self.sent_pkts):
-            self.sent_pkts[i] = (pkt, None) # remove timing since it was not recvd
-        pkt, _ = self.sent_pkts[0]
-        self.servidor.rede.enviar(pkt, self.dst_addr)
-        self.timer = asyncio.get_event_loop().call_later(self.timeout_interval, self._timer)
+        if self.pacotes_sem_ack:
+            segmento, _, dst_addr, _ = self.pacotes_sem_ack[0]
+
+            self.servidor.rede.enviar(segmento, dst_addr)
+            self.pacotes_sem_ack[0][3] = None
 
 
     # Passo 6: calculando o TimeoutInterval
@@ -206,19 +197,6 @@ class Conexao:
             self.devRTT = 0.75*self.devRTT + 0.25 * abs(sampleRTT-self.estimatedRTT)
 
         self.timeoutInterval = self.estimatedRTT + 4*self.devRTT
-
-    def _ack_pkt(self, ack_no):
-        if len(self.sent_pkts) == 0:
-            return
-        self.cwnd += 1
-        idx = self._get_idx(ack_no)
-        _, t0 = self.sent_pkts[idx]
-        del self.sent_pkts[:idx + 1]
-        if t0 is not None:
-            self.timeout_interval = self._calc_timeout_interval(t0, time.time())
-        if len(self.sent_pkts) == 0:
-            self.timer.cancel()
-            self._send_window()
     
     def _rdt_rcv(self, seq_no, ack_no, flags, payload):
         # TODO: trate aqui o recebimento de segmentos provenientes da camada de rede.
@@ -310,10 +288,17 @@ class Conexao:
         """
         # TODO: implemente aqui o fechamento de conexão
         #Passo 4
-        package_header = make_header(
-            self.src_port, self.dst_port, self.seq_no + 1, self.ack_no, FLAGS_FIN
-        )
-        package = fix_checksum(package_header, self.src_addr, self.dst_addr)
-        self.servidor.rede.enviar(package, self.dst_addr)
-        self.servidor.close(self.id_conexao)
+        (src_addr, src_port, dst_addr, dst_port) = self.id_conexao
+        del self.servidor.conexoes[self.id_conexao]
+
+        new_src_addr = dst_addr
+        new_dst_addr = src_addr
+
+        new_src_port = dst_port
+        new_dst_port = src_port
+
+        header = make_header(new_src_port, new_dst_port, self.ack_no,
+                             self.seq_no, FLAGS_FIN)
+        header = fix_checksum(header, new_src_addr, new_dst_addr)
+        self.servidor.rede.enviar(header, new_dst_addr)
         pass
