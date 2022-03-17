@@ -262,24 +262,49 @@ class Conexao:
         # Chame self.servidor.rede.enviar(segmento, dest_addr) para enviar o segmento
         # que você construir para a camada de rede.
 
+        if(len(dados) > MSS):
+            self.enviar(dados[:MSS])
+            self.enviar(dados[MSS:])
+        else:
+            (src_addr, src_port, dst_addr, dst_port) = self.id_conexao
+
+            new_src_addr = dst_addr
+            new_dst_addr = src_addr
+
+            new_src_port = dst_port
+            new_dst_port = src_port
+
+            header = make_header(new_src_port, new_dst_port, self.ack_no,
+                                 self.seq_no, FLAGS_ACK)
+            header = fix_checksum(header+dados, new_src_addr, new_dst_addr)
+            self.sendedMessageTime = time.time()
+            self.servidor.rede.enviar(header, new_dst_addr)
+
+            self.ack_no += len(dados)
+            self.buffer.append(header)
+
+        if not self.timer:
+            self.start_timer()
         #Passo 3 
-        dst_addr, dst_port , src_addr , src_port = self.id_conexao
+        dst_addr, dst_port, src_addr, src_port = self.id_conexao
 
         flags = 0 | FLAGS_ACK
 
-        for i in range(len(dados)// MSS):
-            inicio = i*MSS
+        for i in range(int(len(dados)/MSS)):
+            ini = i*MSS
             fim = min(len(dados), (i+1)*MSS)
 
-            payload = dados[inicio:fim]
+            payload = dados[ini:fim]
 
-            seg = make_header (src_port,dst_port,self.seq_no,self.ack_no, flags)
-            seg_checksum_ver = fix_checksum(seg + payload,src_addr,dst_addr)
-
+            segmento = make_header(src_port, dst_port, self.seq_no, self.ack_no, flags)
+            segmento_checksum_corrigido = fix_checksum(segmento+payload, src_addr, dst_addr)
+            
+            self.servidor.rede.enviar(segmento_checksum_corrigido, dst_addr)
             self.timer = asyncio.get_event_loop().call_later(self.timeoutInterval, self._timer)
-            self.servidor.rede.enviar(seg_checksum_ver, dst_addr)
-            self.seq_no += len(payload)
-        
+            self.pacotes_sem_ack.append( [segmento_checksum_corrigido, len(payload), dst_addr, round(time(), 5)] )
+
+            # Atualizando seq_no com os dados recém enviados
+            self.seq_no += len(payload)   
 
     def fechar(self):
         """
