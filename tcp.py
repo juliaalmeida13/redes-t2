@@ -206,7 +206,7 @@ class Conexao:
         print('recebido payload: %r' % payload)
 
         self.cwnd += 1
-        
+
         if (flags & FLAGS_ACK) == FLAGS_ACK and ack_no > self.seq_no_base:
             self.seq_no_base = ack_no
             if self.pacotes_sem_ack:
@@ -254,7 +254,7 @@ class Conexao:
             i += 1
         if self.timer is not None:
             self.timer.cancel()
-        self.timer = asyncio.get_event_loop().call_later(self.timeout_interval, self._timeout)
+        self.timer = asyncio.get_event_loop().call_later(self.timeout_interval, self._timer)
 
     def enviar(self, dados):
         """
