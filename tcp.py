@@ -261,30 +261,7 @@ class Conexao:
         # TODO: implemente aqui o envio de dados.
         # Chame self.servidor.rede.enviar(segmento, dest_addr) para enviar o segmento
         # que você construir para a camada de rede.
-
-        if(len(dados) > MSS):
-            self.enviar(dados[:MSS])
-            self.enviar(dados[MSS:])
-        else:
-            (src_addr, src_port, dst_addr, dst_port) = self.id_conexao
-
-            new_src_addr = dst_addr
-            new_dst_addr = src_addr
-
-            new_src_port = dst_port
-            new_dst_port = src_port
-
-            header = make_header(new_src_port, new_dst_port, self.ack_no,
-                                 self.seq_no, FLAGS_ACK)
-            header = fix_checksum(header+dados, new_src_addr, new_dst_addr)
-            self.sendedMessageTime = time.time()
-            self.servidor.rede.enviar(header, new_dst_addr)
-
-            self.ack_no += len(dados)
-            self.buffer.append(header)
-
-        if not self.timer:
-            self.start_timer()
+        
         #Passo 3 
         dst_addr, dst_port, src_addr, src_port = self.id_conexao
 
