@@ -169,6 +169,7 @@ class Conexao:
         self.estimatedRTT = None
         self.fila_envio = []
 
+        self.cwnd = 1
     #def _exemplo_timer(self):
         # Esta função é só um exemplo e pode ser removida
         #print('Este é um exemplo de como fazer um timer')
@@ -204,6 +205,8 @@ class Conexao:
         # garantir que eles não sejam duplicados e que tenham sido recebidos em ordem.
         print('recebido payload: %r' % payload)
 
+        self.cwnd += 1
+        
         if (flags & FLAGS_ACK) == FLAGS_ACK and ack_no > self.seq_no_base:
             self.seq_no_base = ack_no
             if self.pacotes_sem_ack:
@@ -262,6 +265,7 @@ class Conexao:
         # que você construir para a camada de rede.
 
         #Passo 3 
+        
         dst_addr, dst_port, src_addr, src_port = self.id_conexao
 
         flags = 0 | FLAGS_ACK
