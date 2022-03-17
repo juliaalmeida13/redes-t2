@@ -240,6 +240,20 @@ class Conexao:
         """
         self.callback = callback
 
+    def _send_window(self):
+        if len(self.pktsQ) == 0:
+            return
+        i = 0
+        while i < self.cwnd and len(self.pktsQ) != 0:
+            package = self.pktsQ.pop(0)
+            self.sent_pkts.append((package, time.time()))
+            _, _, seq, ack, _, _, _, _ = read_header(package)
+            self.servidor.rede.enviar(package, self.dst_addr)
+            i += 1
+        if self.timer is not None:
+            self.timer.cancel()
+        self.timer = asyncio.get_event_loop().call_later(self.timeout_interval, self._timeout)
+
     def enviar(self, dados):
         """
         Usado pela camada de aplicação para enviar dados
