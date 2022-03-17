@@ -281,15 +281,7 @@ class Conexao:
             self.pacotes_sem_ack.append( [segmento_checksum_corrigido, len(payload), dst_addr, round(time(), 5)] )
 
             # Atualizando seq_no com os dados recém enviados
-            self.seq_no += len(payload)
-            package_header = make_header(
-                self.src_port, self.dst_port, self.seq_no + 1, self.ack_no, FLAGS_ACK
-            )
-            package = fix_checksum(package_header + dados[:MSS], self.src_addr, self.dst_addr)
-            self.pktsQ.append(package)
-            self.seq_no += len(dados[:MSS])
-            dados = dados[MSS:]
-        self._send_window()        
+            self.seq_no += len(payload)   
 
     def fechar(self):
         """
