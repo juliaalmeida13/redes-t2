@@ -208,7 +208,7 @@ class Conexao:
         _, t0 = self.sent_pkts[idx]
         del self.sent_pkts[:idx + 1]
         if t0 is not None:
-            self.timeoutInterval = self.timeoutInterval(t0, time.time())
+            self.timeoutInterval = self.timeout_Interval(t0, time.time())
         if len(self.sent_pkts) == 0:
             self.timer.cancel()
             self._send_window()
@@ -247,6 +247,9 @@ class Conexao:
         segmento = make_header(src_port, dst_port, self.seq_no_base, self.ack_no, FLAGS_ACK)
         segmento_checksum_corrigido = fix_checksum(segmento, src_addr, dst_addr)
         self.servidor.rede.enviar(segmento_checksum_corrigido, dst_addr)
+
+        if len(self.sent_pkts) != 0:
+            self._ack_pkt(ack_no)
     # Os métodos abaixo fazem parte da API
 
     def registrar_recebedor(self, callback):
