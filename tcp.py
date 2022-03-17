@@ -208,7 +208,7 @@ class Conexao:
         _, t0 = self.sent_pkts[idx]
         del self.sent_pkts[:idx + 1]
         if t0 is not None:
-            self.timeoutInterval = self.timeout_interval(t0, time.time())
+            self.timeoutInterval = self.timeoutInterval(t0, time.time())
         if len(self.sent_pkts) == 0:
             self.timer.cancel()
             self._send_window()
