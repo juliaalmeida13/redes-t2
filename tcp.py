@@ -199,20 +199,6 @@ class Conexao:
 
         self.timeoutInterval = self.estimatedRTT + 4*self.devRTT
     
-        def _ack_pkt(self, ack_no):
-            if len(self.sent_pkts) == 0:
-                return
-        self.cwnd += 1
-        idx = self._get_idx(ack_no)
-        _, t0 = self.sent_pkts[idx]
-        del self.sent_pkts[:idx + 1]
-        if t0 is not None:
-            self.timeout_interval = self._calc_timeout_interval(t0, time.time())
-        if len(self.sent_pkts) == 0:
-            self.timer.cancel()
-            self._send_window()
-
-
     def _rdt_rcv(self, seq_no, ack_no, flags, payload):
         # TODO: trate aqui o recebimento de segmentos provenientes da camada de rede.
         # Chame self.callback(self, dados) para passar dados para a camada de aplicação após
