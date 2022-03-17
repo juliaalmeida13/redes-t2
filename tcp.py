@@ -282,9 +282,6 @@ class Conexao:
 
             # Atualizando seq_no com os dados recém enviados
             self.seq_no += len(payload)
-            
-       #Passo 7 
-        while len(dados) != 0:
             package_header = make_header(
                 self.src_port, self.dst_port, self.seq_no + 1, self.ack_no, FLAGS_ACK
             )
